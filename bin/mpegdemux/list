@@ -1,0 +1,11 @@
+480ed000: end code
+System headers: 2
+Packs:          590298
+Packets:        649070
+End codes:      1
+Skipped:        2044 bytes
+Stream be:      58774 packets / 68930 bytes
+Stream bf:      2 packets / 2190 bytes
+Stream c0:      29385 packets / 59238400 bytes
+Stream c1:      29385 packets / 59238400 bytes
+Stream e0:      531524 packets / 1072614677 bytes

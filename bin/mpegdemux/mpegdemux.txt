@@ -1,0 +1,224 @@
+MPEGDEMUX(1)                       mpegdemux                      MPEGDEMUX(1)
+
+
+
+NAME
+       mpegdemux - MPEG1/2 system stream demultiplexer
+
+
+SYNOPSIS
+       mpegdemux [options] [input [output]]
+
+
+DESCRIPTION
+       mpegdemux(1)  is  an MPEG1/MPEG2 system stream demultiplexer. It can be
+       used to list the contents of an MPEG system stream and to extract  ele-
+       mentary streams.
+
+       mpegdemux(1) has four primary modes of operation:
+
+       scan   In  this  mode  the MPEG system stream is scanned for elementary
+              streams.
+
+       list   In this mode the contents of an MPEG system stream are listed in
+              a  textual  form. This is useful to get an overview of what's in
+              an MPEG file
+
+       demux  In this mode elementary streams are extracted from an MPEG  sys-
+              tem  stream.  The system stream packet structure is dissolved in
+              the process. Typically each extracted stream is written  to  its
+              own file.
+
+       remux  This is like demux, except that the MPEG system stream structure
+              is left intact. This means that the output is again an MPEG sys-
+              tem stream with all but the selected elementary streams removed.
+
+
+OPTIONS
+       -a, --ac3
+              AC3 sound packets in DVD MPEG2 streams have a 3 byte header that
+              is neither part of the MPEG specification nor of the AC3  speci-
+              fication. When this option is used, these 3 bytes are removed to
+              produce a correct AC3 stream. Note that this option  applies  to
+              all  selected  substreams without checking whether they actually
+              contain an AC3 elementary stream.
+
+       -b, --base-name name
+              When demultiplexing more than one stream, the output file  names
+              can  be  set using this option. To generate the output file name
+              for a stream, every # character in name is  replaced  by  a  hex
+              digit  of  the  stream  id.  For  example,  to extract all video
+              streams in one go, use something like
+
+              $ mpegdemux -d -b video_##.m1v -s 0xc0-0xcf src.mpg
+
+              to get files video_c0.m1v, video_c1.m1v, ...
+
+       -c --scan
+              Scan a system stream for elementary streams. This is the default
+              mode. All streams and substreams are automatically selected when
+              using this option.
+
+       -d, --demux
+              Demultiplex an MPEG system stream. The demultiplexed streams are
+              written  to  the  output  file  unless the --base-name option is
+              used. If the --base-name option is not used, only one stream can
+              be  demultiplexed  (if  more streams are specified, they will be
+              randomly interleaved in the output file).
+
+       -D, --no-drop
+              Don't drop incomplete packets in demuxing and remuxing mode.
+
+       -e, --no-end
+              Don't print end codes in listing mode. Additionally, in remuxing
+              mode, make sure that there is exactly one end code at the end of
+              the stream.
+
+       -E, --empty-packs
+              When streams are  removed  during  remuxing,  packs  can  become
+              empty.  Including  these  empty packs in the output is pointless
+              and therefore is not done by default. Use this option  to  force
+              inclusion of all packs.
+
+       -F, --first-pts
+              In  scan  mode,  in addition to each stream's first packet, also
+              list the packet with the lowest presentation time stamp.
+
+       -h, --no-system-headers
+              Don't print system headers in listing mode. Additionally, in re-
+              muxing mode, don't repeat system headers.
+
+       -i, --invalid spec
+              Select  invalid streams. Packets of invalid streams are not rec-
+              ognized as packets and their contents are parsed as MPEG  system
+              stream  data  rather than being skipped. This is useful for bro-
+              ken/incomplete streams. The syntax for spec is the same  as  for
+              -s.  Additionally, if spec is "-" then all streams that have not
+              yet been selected by -s are made invalid.
+
+       -k, --no-packs
+              Don't print packs in listing mode.
+
+       -K, --remux-skipped
+              Copy bytes that are skipped while looking for a start code.
+
+       -l, --list
+              List the system headers, packs and packets  in  an  MPEG  system
+              stream.
+
+       -m, --packet-max-size size
+              Set the maximum packet size to size. Packets in the input stream
+              that are larger are considered invalid. As with the  -i  option,
+              the  packet  is  not  simply  skipped  but parsed as MPEG system
+              stream data.
+
+       -p, --substream spec
+              This option selects private substreams. Whenever Private  Stream
+              1  (0xbd)  is selected using -s, the substreams within that pri-
+              vate stream can be selected using -p. The syntax for spec is the
+              same as for -s.
+
+       -P, --substream-map id1 id2
+              Remap substream id1 to id2 when remuxing.
+
+       -r, --remux
+              Remultiplex an MPEG system stream. The output MPEG system stream
+              is written to the output file.  Many  options  control  what  is
+              copied from the input to the output and what is discarded.
+
+       -s, --streams spec
+              This  option  selects  streams. spec specifies the stream IDs in
+              the following form:
+
+              [+|-]<id>[-<id>]{/[+|-]<id>[-<id>]}
+
+              where id is either a numeric stream ID or one of all or none.  A
+              "-"  in  front  of  an ID range means exclusion. For example the
+              spec
+
+              -s 0xc0-0xcf/-0xc2
+
+              selects all video streams (0xc0 - 0xcf) except stream 0xc2.
+
+       -S, --stream-map id1 id2
+              Remap stream id1 to id2 when remuxing.
+
+       -t, --no-packets
+              Don't print packets in listing mode.
+
+       -u, --spu
+              This option is used to extract DVD subtitles.  It  is  necessary
+              because the subtitle streams on DVD don't contain all the timing
+              information (the time stamps  in  the  packet  headers  are  re-
+              quired).  If this option is used during demultiplexing, the out-
+              put files for all substreams are written in the  following  for-
+              mat:
+
+              "SPU " (4 bytes)
+
+              PTS (8 bytes, MSB first)
+              SPU packet
+
+              PTS (8 bytes)
+              SPU packet
+
+              and so on
+
+       -x, --split
+              Split  the remuxed stream at sequence boundaries. This option is
+              only meaningful in remuxing mode. It can not  be  used  together
+              with  the  -e  option.  The  individual sequences are written to
+              files whose name was set with the -b option.
+
+       --help Print usage information
+
+       --version
+              Print version information
+
+
+EXAMPLES
+       Scan a system stream for elementary streams:
+
+       $ mpegdemux -c -v src.mpg
+
+
+       List the contents of an MPEG system stream:
+
+       $ mpegdemux -l -k -s all -p all src.mpg
+
+
+       Extract the first video stream:
+
+       $ mpegdemux -d -s 0xe0 src.mpg dst.m1v
+
+
+       Extract all audio streams:
+
+       $ mpegdemux -d -s 0xc0-0xdf -b audio_##.mpa src.mpg
+
+
+       Remove the second video stream:
+
+       $ mpegdemux -r -s all/-0xc1 -p all src.mpg dst.mpg
+
+
+       Extract the first AC3 audio stream from a DVD MPEG2 system stream:
+
+       $ mpegdemux -d -s 0xbd -p 0x80 --ac3 src.mpg dst.ac3
+
+
+       Exchange the first and the second audio stream:
+
+       $ mpegdemux -r -s all -p all -S 0xc0 0xc1 -S 0xc1 0xc0 src.mpg dst.mpg
+
+
+SEE ALSO
+       mplex(1)
+
+
+AUTHOR
+       Hampa Hug <hampa@hampa.ch>
+
+
+
+HH                                2009-02-13                      MPEGDEMUX(1)
